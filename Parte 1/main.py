@@ -13,7 +13,7 @@ lastBlockHash = lastBlockData['hash']
 print(f'Hash do último bloco da blockchain: {lastBlockHash}')
 
 # Hash utilizado no trabalho
-# lastBlockHash = '00000000000000000000a92286a1e85bdf8e6500f368f5ebe44f57e7f1fa720a'
+# lastBlockHash = '000000000000000000024a9a60f3931b7c42736b4ac5f9eaa3704cfd27365fd2'
 
 # Requisição para pegar as informações do último bloco
 url2 = 'https://blockchain.info/rawblock/'+lastBlockHash
