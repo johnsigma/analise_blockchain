@@ -1,9 +1,7 @@
 import math
 from scipy.stats import chisquare
 from collections import Counter
-import copy
 from datetime import datetime
-import pickle
 import altair as alt
 import os
 import json
