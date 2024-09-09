@@ -1,3 +1,6 @@
+import math
+from scipy.stats import chisquare
+from collections import Counter
 import copy
 from datetime import datetime
 import pickle
@@ -140,45 +143,6 @@ def calculaHistoricoSaldo(transacoes, cluster):
     return historico_saldo
 
 
-# def calculaHistoricoSaldo(transacoes, cluster):
-#     hashs_calculados = []
-#     transacoes_relevantes = []
-
-#     for transacao in transacoes:
-#         hash_transacao = transacao['hash']
-
-#         if hash_transacao in hashs_calculados:
-#             continue
-
-#         hashs_calculados.append(hash_transacao)
-
-#         transacoes_relevantes.append({
-#             'time': transacao['time'],
-#             'hash': hash_transacao,
-#             'inputs': transacao.get('inputs', []),
-#             'out': transacao.get('out', [])
-#         })
-
-#     transacoes_relevantes.sort(key=lambda x: x['time'])
-
-#     historico_saldo = []
-#     saldo_atual = 0
-
-#     for transacao in transacoes_relevantes:
-#         for entrada in transacao['inputs']:
-#             if entrada['prev_out']['addr'] in cluster:
-#                 saldo_atual -= entrada['prev_out']['value']
-
-#         for saida in transacao['out']:
-#             if saida.get('addr') in cluster:
-#                 saldo_atual += saida['value']
-
-#         historico_saldo.append(
-#             (datetime.fromtimestamp(transacao['time']), saldo_atual/100000000, transacao['hash']))
-
-#     return historico_saldo
-
-
 def plotar_grafico_linha(historico_saldo, nome):
     tempos_datetime = [t[0] for t in historico_saldo]
     saldos = [saldo[1] for saldo in historico_saldo]
@@ -304,25 +268,8 @@ def plota_curva_lorenz(values):
     plt.ylabel("Proporção da riqueza")
     plt.legend()
 
-    # Exibe o gráfico
-    plt.show()
+    plt.savefig("lorenz.svg")
 
-
-# def valores_por_endereco(cluster, transacoes):
-#     valoresPorEndereco = {}
-
-#     for endereco in cluster:
-#         valoresPorEndereco[endereco] = 0
-
-#         for transacao in transacoes:
-#             for entrada in transacao['inputs']:
-#                 if entrada['prev_out']['addr'] == endereco:
-#                     valoresPorEndereco[endereco] -= entrada['prev_out']['value']
-#             for saida in transacao['out']:
-#                 if saida.get('addr') == endereco:
-#                     valoresPorEndereco[endereco] += saida['value']
-
-#     return valoresPorEndereco
 
 def valores_por_endereco(cluster, transacoes):
     valoresPorEndereco = {endereco: 0 for endereco in cluster}
@@ -344,6 +291,105 @@ def valores_por_endereco(cluster, transacoes):
     return valoresPorEndereco
 
 
+def obter_primeiro_digito(valor):
+    while valor >= 10:
+        valor //= 10
+    return valor
+
+
+def calcular_frequencia_benford(transacoes):
+    # Extrai os valores das transações
+    valores = [
+        sum(saida['value'] for saida in tx['out'])
+        for tx in transacoes
+    ]  # Soma os valores de todas as saídas para obter o valor total da transação
+
+    # Extrai os primeiros dígitos
+    primeiros_digitos = [int(str(abs(valor))[0]) for valor in valores]
+
+    # Contando a frequência de cada dígito
+    contagem_primeiros_digitos = Counter(primeiros_digitos)
+
+    return contagem_primeiros_digitos
+
+
+def frequencia_esperada_benford(total_transacoes):
+    return {digito: math.log10(1 + 1 / digito) * total_transacoes for digito in range(1, 10)}
+
+
+def salvar_frequencia_benford(frequencia_obtida, total_transacoes):
+    digitos = list(range(1, 10))
+    frequencia_esperada = [frequencia_esperada_benford(
+        total_transacoes)[digito] for digito in digitos]
+    frequencia_obtida_lista = [
+        frequencia_obtida.get(digito, 0) for digito in digitos]
+
+    # Criando o gráfico
+    plt.figure(figsize=(10, 6))
+    plt.bar(digitos, frequencia_obtida_lista, alpha=0.7,
+            label='Frequência Obtida', color='blue')
+    plt.plot(digitos, frequencia_esperada, color='red',
+             marker='o', label='Lei de Benford', linewidth=2)
+
+    plt.xlabel('Primeiro Dígito')
+    plt.ylabel('Frequência')
+    plt.title('Distribuição da Lei de Benford vs Frequência Obtida')
+    plt.xticks(digitos)
+    plt.legend()
+    plt.grid(True)
+
+    # Salvando o gráfico em um arquivo
+    plt.savefig("benford.svg")
+    plt.close()
+
+
+def teste_qui_quadrado(frequencia_obtida, total_transacoes):
+    frequencia_esperada = [frequencia_esperada_benford(
+        total_transacoes)[digito] for digito in range(1, 10)]
+    frequencia_obtida_lista = [frequencia_obtida.get(
+        digito, 0) for digito in range(1, 10)]
+
+    qui_quadrado, p_valor = chisquare(
+        frequencia_obtida_lista, frequencia_esperada)
+
+    return qui_quadrado, p_valor
+
+
+def analisar_benford(transacoes):
+    frequencia_obtida = calcular_frequencia_benford(transacoes)
+    total_transacoes = sum(frequencia_obtida.values())
+
+    # Salvando o gráfico
+    salvar_frequencia_benford(frequencia_obtida, total_transacoes)
+
+    # Realizando o teste Qui-Quadrado
+    qui_quadrado, p_valor = teste_qui_quadrado(
+        frequencia_obtida, total_transacoes)
+
+    # Comparação de valores obtidos e esperados
+    frequencia_esperada = frequencia_esperada_benford(total_transacoes)
+    comparacao = {digito: {"obtida": frequencia_obtida.get(
+        digito, 0), "esperada": frequencia_esperada[digito]} for digito in range(1, 10)}
+
+    return comparacao, qui_quadrado, p_valor
+
+
+def imprime_resultados_benford(comparacao, qui_quadrado, p_valor):
+
+    esperado = []
+    obtido = []
+
+    for _, valores in comparacao.items():
+        esperado.append(valores['esperada'])
+        obtido.append(valores['obtida'])
+
+    print(f'Esperado: {esperado}')
+    print(f'Obtido: {obtido}')
+
+    print(f'Qui-Quadrado: {qui_quadrado}')
+    print(f'P-Valor: {p_valor}')
+
+
 def main():
     base_path = 'rawaddr/'
 
@@ -356,7 +402,6 @@ def main():
     # print(len(clusters))
 
     cluster = clusters['1JHH1pmHujcVa1aXjRrA13BJ13iCfgfBqj']
-
     set_cluster = set(cluster)
     cluster = list(set_cluster)
 
@@ -366,22 +411,23 @@ def main():
         if endereco['address'] in cluster:
             transacoes.extend(endereco['txs'])
 
-    historico_saldo = calculaHistoricoSaldo(
-        transacoes, cluster)
+    historico_saldo = calculaHistoricoSaldo(transacoes, cluster)
 
-    # plotar_grafico_linha(historico_saldo, 'not_h1')
+    imprimir_historico_saldo(historico_saldo)
 
-    # imprimir_historico_saldo(historico_saldo)
+    plotar_grafico_linha(historico_saldo, 'historico_saldo')
 
     valores = valores_por_endereco(cluster, transacoes)
-
-    # print(json.dumps(valores, indent=4))
 
     valores_transacoes = list(valores.values())
     indice_gini = calcular_indice_gini(valores_transacoes)
     print(f'Índice de Gini: {indice_gini}')
 
     plota_curva_lorenz(valores_transacoes)
+
+    resultados_benford = analisar_benford(transacoes)
+
+    imprime_resultados_benford(*resultados_benford)
 
 
 if __name__ == '__main__':
