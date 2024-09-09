@@ -402,31 +402,30 @@ def main():
     cluster = clusters['1JHH1pmHujcVa1aXjRrA13BJ13iCfgfBqj']
     set_cluster = set(cluster)
     cluster = list(set_cluster)
-    print(len(cluster))
 
-    # transacoes = []
+    transacoes = []
 
-    # for endereco in data_enderecos:
-    #     if endereco['address'] in cluster:
-    #         transacoes.extend(endereco['txs'])
+    for endereco in data_enderecos:
+        if endereco['address'] in cluster:
+            transacoes.extend(endereco['txs'])
 
-    # historico_saldo = calculaHistoricoSaldo(transacoes, cluster)
+    historico_saldo = calculaHistoricoSaldo(transacoes, cluster)
 
-    # imprimir_historico_saldo(historico_saldo)
+    imprimir_historico_saldo(historico_saldo)
 
-    # plotar_grafico_linha(historico_saldo, 'historico_saldo')
+    plotar_grafico_linha(historico_saldo, 'historico_saldo')
 
-    # valores = valores_por_endereco(cluster, transacoes)
+    valores = valores_por_endereco(cluster, transacoes)
 
-    # valores_transacoes = list(valores.values())
-    # indice_gini = calcular_indice_gini(valores_transacoes)
-    # print(f'Índice de Gini: {indice_gini}')
+    valores_transacoes = list(valores.values())
+    indice_gini = calcular_indice_gini(valores_transacoes)
+    print(f'Índice de Gini: {indice_gini}')
 
-    # plota_curva_lorenz(valores_transacoes)
+    plota_curva_lorenz(valores_transacoes)
 
-    # resultados_benford = analisar_benford(transacoes)
+    resultados_benford = analisar_benford(transacoes)
 
-    # imprime_resultados_benford(*resultados_benford)
+    imprime_resultados_benford(*resultados_benford)
 
 
 if __name__ == '__main__':
