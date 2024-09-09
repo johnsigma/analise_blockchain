@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    #vis.vega-embed {
+      width: 100%;
+      display: flex;
+    }
+
+    #vis.vega-embed details,
+    #vis.vega-embed details summary {
+      position: relative;
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+  <div id="vis"></div>
+  <script>
+    (function(vegaEmbed) {
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-8779535a963cb57b8223aee37f9e71a1"}, "mark": {"type": "line"}, "encoding": {"tooltip": [{"field": "Tempo", "type": "temporal"}, {"field": "Saldo", "type": "quantitative"}], "x": {"field": "Tempo", "title": "Tempo", "type": "temporal"}, "y": {"field": "Saldo", "title": "Saldo(em BTC)", "type": "quantitative"}}, "params": [{"name": "param_1", "select": {"type": "interval", "encodings": ["x", "y"]}, "bind": "scales"}], "title": "Hist\u00f3rico de saldo do cluster", "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-8779535a963cb57b8223aee37f9e71a1": [{"Tempo": "2021-01-22T13:13:52", "Saldo": 0.00036514}, {"Tempo": "2021-02-01T15:01:10", "Saldo": 0.00087435}, {"Tempo": "2021-03-11T16:25:05", "Saldo": 0.00105193}, {"Tempo": "2021-08-26T15:17:41", "Saldo": 0.00126256}, {"Tempo": "2021-09-01T20:19:42", "Saldo": 0.00163027}, {"Tempo": "2021-09-10T10:33:17", "Saldo": 40.00158803}, {"Tempo": "2021-09-10T11:54:19", "Saldo": 0.00163027}, {"Tempo": "2021-09-14T17:09:30", "Saldo": 0.00221714}, {"Tempo": "2022-02-03T09:45:00", "Saldo": 0.0}]}};
+      var embedOpt = {"mode": "vega-lite"};
+
+      function showError(el, error){
+          el.innerHTML = ('<div style="color:red;">'
+                          + '<p>JavaScript Error: ' + error.message + '</p>'
+                          + "<p>This usually means there's a typo in your chart specification. "
+                          + "See the javascript console for the full traceback.</p>"
+                          + '</div>');
+          throw error;
+      }
+      const el = document.getElementById('vis');
+      vegaEmbed("#vis", spec, embedOpt)
+        .catch(error => showError(el, error));
+    })(vegaEmbed);
+
+  </script>
+</body>
+</html>
